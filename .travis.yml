@@ -41,11 +41,16 @@ addons:
 
 # Start emulator early so it's ready when the build is done
 before_install:
+  - env
   - sudo apt-get install -y xvfb
   # Install the rest of tools (e.g. avdmanager)
   - yes | sdkmanager tools
   - echo no | avdmanager create avd --force --name test --package 'system-images;android-24;default;armeabi-v7a' --abi armeabi-v7a --sdcard 100M
-  - xvfb-run $ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window &
+  - 'echo Home: $ANDROID_HOME'
+  - 'ls -l $ANDROID_HOME'
+  - 'ls -l $ANDROID_HOME/emulator'
+  - 'ls -l $ANDROID_HOME/tools'
+  - xvfb-run $ANDROID_HOME/emulator/emulator-headless -avd test -no-audio -no-window &
 
 before_script:
   - android-wait-for-emulator
@@ -56,6 +61,7 @@ before_script:
   - adb shell input keyevent 82 &
 
 script:
+  - env
   - ./gradlew build
   - ./gradlew test
   - ./gradlew connectedCheck
