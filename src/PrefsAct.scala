@@ -24,17 +24,19 @@ class PrefsAct extends PreferenceActivity {
 	lazy val prefs = new PrefsWrapper(this)
 
 	def exportPrefs() {
+		Log.i(TAG, "Handling export")
 		val filename = "profile-%s.aprs".format(new SimpleDateFormat("yyyyMMdd-HHmm").format(new Date()))
 		val directory = UIHelper.getExportDirectory(this)
 		val file = new File(directory, filename)
 		try {
-			directory.mkdirs()
+			Log.i(TAG, "Mkdir: " + directory.mkdirs())
 			val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 			val json = new JSONObject(prefs.getAll)
 			val fo = new PrintWriter(file)
 			fo.println(json.toString(2))
 			fo.close()
 
+			Log.i(TAG, "Sharing file")
 			UIHelper.shareFile(this, file, filename)
 		} catch {
 			case e : Exception => {
