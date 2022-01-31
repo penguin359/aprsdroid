@@ -29,6 +29,8 @@ object UIHelper
 		} else {
 			Environment.getExternalStorageDirectory()
 		}
+		Log.i("APRSdroid.UIHelper", "Storage: " + Environment.getExternalStorageDirectory().exists())
+		Log.i("APRSdroid.UIHelper", "Storage public: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).exists())
 		Log.i("APRSdroid.UIHelper", "Top: " + base.exists())
 		return new File(base, "APRSdroid")
 	}
