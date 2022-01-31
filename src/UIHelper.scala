@@ -17,6 +17,7 @@ import java.util.Date
 
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
 
 import androidx.core.content.FileProvider
 
@@ -28,6 +29,7 @@ object UIHelper
 		} else {
 			Environment.getExternalStorageDirectory()
 		}
+		Log.i("APRSdroid.UIHelper", "Top: " + base.exists())
 		return new File(base, "APRSdroid")
 	}
 

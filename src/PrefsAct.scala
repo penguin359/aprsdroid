@@ -29,7 +29,9 @@ class PrefsAct extends PreferenceActivity {
 		val directory = UIHelper.getExportDirectory(this)
 		val file = new File(directory, filename)
 		try {
+			Log.i(TAG, "Before: " + directory.exists())
 			Log.i(TAG, "Mkdir: " + directory.mkdirs())
+			Log.i(TAG, "After: " + directory.exists())
 			val prefs = PreferenceManager.getDefaultSharedPreferences(this)
 			val json = new JSONObject(prefs.getAll)
 			val fo = new PrintWriter(file)
