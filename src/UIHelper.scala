@@ -1,25 +1,21 @@
 package org.aprsdroid.app
 // this class is a hack containing all the common UI code for different Activity subclasses
 
-import _root_.android.app.{Activity, ListActivity}
-import _root_.android.app.AlertDialog
-import _root_.android.content.{BroadcastReceiver, Context, DialogInterface, Intent, IntentFilter}
+import _root_.android.app.{Activity, AlertDialog, ListActivity}
 import _root_.android.content.res.Configuration
+import _root_.android.content.{Context, DialogInterface, Intent}
 import _root_.android.net.Uri
 import _root_.android.os.{Build, Environment}
-import _root_.android.util.Log
-import _root_.android.view.{ContextMenu, Menu, MenuItem, View, WindowManager}
+import _root_.android.view._
 import _root_.android.widget.AdapterView.AdapterContextMenuInfo
-import _root_.android.widget.{EditText, Toast}
+import _root_.android.widget.Toast
+import android.content.pm.PackageManager
+import android.util.Log
+import androidx.core.content.FileProvider
+
 import java.io.{File, PrintWriter}
 import java.text.SimpleDateFormat
 import java.util.Date
-
-import android.content.pm.PackageManager
-import android.provider.Settings
-import android.util.Log
-
-import androidx.core.content.FileProvider
 
 object UIHelper
 {
@@ -29,8 +25,14 @@ object UIHelper
 		} else {
 			Environment.getExternalStorageDirectory()
 		}
-		Log.i("APRSdroid.UIHelper", "Storage: " + Environment.getExternalStorageDirectory().exists())
-		Log.i("APRSdroid.UIHelper", "Storage public: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).exists())
+		Log.i("APRSdroid.UIHelper", "Storage: " + Environment.getExternalStorageDirectory())
+		Log.i("APRSdroid.UIHelper", "Storage exists: " + Environment.getExternalStorageDirectory().exists())
+		Log.i("APRSdroid.UIHelper", "Storage mkdirs: " + Environment.getExternalStorageDirectory().mkdirs())
+		Log.i("APRSdroid.UIHelper", "Storage files: " + Option(Environment.getExternalStorageDirectory().list()).map(_.mkString(", ")))
+		Log.i("APRSdroid.UIHelper", "Storage public: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS))
+		Log.i("APRSdroid.UIHelper", "Storage public exists: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).exists())
+		Log.i("APRSdroid.UIHelper", "Storage public mkdirs: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).mkdirs())
+		Log.i("APRSdroid.UIHelper", "Storage public files: " + Option(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).list()).map(_.mkString(", ")))
 		Log.i("APRSdroid.UIHelper", "Top: " + base.exists())
 		return new File(base, "APRSdroid")
 	}
