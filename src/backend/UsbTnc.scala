@@ -184,7 +184,11 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 			}
 			val baudrate = prefs.getStringInt("baudrate", 115200)
 			ser.setParameters(baudrate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
-			ser.setFlowControl(UsbSerialPort.FlowControl.NONE)
+                        try {
+				//ser.setFlowControl(UsbSerialPort.FlowControl.NONE)
+			} catch {
+				case e : IOException =>
+			}
 
 			// success: remember this for usb-attach launch
 			prefs.prefs.edit().putString(UsbTnc.deviceHandle(dev), prefs.getString("proto", "kiss")).commit()
