@@ -59,6 +59,8 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 	var thread : UsbThread = null
 	var dev : UsbDevice = null
 	var con : UsbDeviceConnection = null
+	val prober = UsbSerialProber.getDefaultProber()
+	var driver : UsbSerialDriver = null
 	var ser : UsbSerialPort = null
 	var alreadyRunning = false
 
@@ -114,8 +116,8 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 		for ((name, dev) <- dl) {
 			val deviceVID = dev.getVendorId()
 			val devicePID = dev.getProductId()
-			val prober = UsbSerialProber.getDefaultProber()
-			if (prober.probeDevice(dev) != null) {
+			driver = prober.probeDevice(dev)
+			if (driver != null) {
 				// this is not a USB Hub
 				log("Found USB device %04x:%04x, requesting permissions.".format(deviceVID, devicePID))
 				this.dev = dev
@@ -164,11 +166,9 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 		}
 
 		override def run() {
-			val con = usbManager.openDevice(dev)
-			val prober = UsbSerialProber.getDefaultProber()
-			val driver = prober.probeDevice(dev)
 			if (driver == null)
 				return
+			val con = usbManager.openDevice(dev)
 			ser = driver.getPorts().get(0)
 			if (ser == null) {
 				con.close()
