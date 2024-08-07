@@ -11,11 +11,11 @@ import android.hardware.usb.UsbManager
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbDeviceConnection
 import android.util.Log
-import java.io.{InputStream, OutputStream}
+import java.io.{InputStream, OutputStream, IOException}
 
 import net.ab0oo.aprs.parser._
 
-import com.felhr.usbserial._
+import com.hoho.android.usbserial.driver._
 
 object UsbTnc {
 	def deviceHandle(dev : UsbDevice) = {
@@ -34,6 +34,20 @@ object UsbTnc {
 	}
 }
 
+class SerialInputStream(ser : UsbSerialPort) extends InputStream {
+	def read() : Int = {
+		var dest = Array[Byte](0)
+		ser.read(dest, 1, 0)
+	}
+}
+
+class SerialOutputStream(ser : UsbSerialPort) extends OutputStream {
+	def write(value: Int) = {
+		var src = Array[Byte](value.toByte)
+		ser.write(src, 1, 0)
+	}
+}
+
 class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(prefs) {
 	val TAG = "APRSdroid.Usb"
 
@@ -45,7 +59,7 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 	var thread : UsbThread = null
 	var dev : UsbDevice = null
 	var con : UsbDeviceConnection = null
-	var ser : UsbSerialInterface = null
+	var ser : UsbSerialPort = null
 	var alreadyRunning = false
 
 	val intent = new Intent(USB_PERM_ACTION)
@@ -60,7 +74,7 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 				return
 			}
 			if (i.getExtras() == null) {
-                                /* this shouldn't ever happen, don't need i18n */
+				/* this shouldn't ever happen, don't need i18n */
 				service.postAbort("USB permission bug")
 				return
 			}
@@ -100,7 +114,8 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 		for ((name, dev) <- dl) {
 			val deviceVID = dev.getVendorId()
 			val devicePID = dev.getProductId()
-			if (UsbSerialDevice.isSupported(dev)) {
+			val prober = UsbSerialProber.getDefaultProber()
+			if (prober.probeDevice(dev) != null) {
 				// this is not a USB Hub
 				log("Found USB device %04x:%04x, requesting permissions.".format(deviceVID, devicePID))
 				this.dev = dev
@@ -150,18 +165,26 @@ class UsbTnc(service : AprsService, prefs : PrefsWrapper) extends AprsBackend(pr
 
 		override def run() {
 			val con = usbManager.openDevice(dev)
-			ser = UsbSerialDevice.createUsbSerialDevice(dev, con)
-			if (ser == null || !ser.syncOpen()) {
+			val prober = UsbSerialProber.getDefaultProber()
+			val driver = prober.probeDevice(dev)
+			if (driver == null)
+				return
+			ser = driver.getPorts().get(0)
+			if (ser == null) {
 				con.close()
 				service.postAbort(service.getString(R.string.p_serial_unsupported))
 				return
 			}
+			try {
+				ser.open(con)
+			} catch {
+				case e : IOException =>
+				service.postAbort(e.getMessage()); running = false
+				return
+			}
 			val baudrate = prefs.getStringInt("baudrate", 115200)
-			ser.setBaudRate(baudrate)
-			ser.setDataBits(UsbSerialInterface.DATA_BITS_8)
-			ser.setStopBits(UsbSerialInterface.STOP_BITS_1)
-			ser.setParity(UsbSerialInterface.PARITY_NONE)
-			ser.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF)
+			ser.setParameters(baudrate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE)
+			ser.setFlowControl(UsbSerialPort.FlowControl.NONE)
 
 			// success: remember this for usb-attach launch
 			prefs.prefs.edit().putString(UsbTnc.deviceHandle(dev), prefs.getString("proto", "kiss")).commit()
